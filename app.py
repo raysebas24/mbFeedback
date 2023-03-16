@@ -10,7 +10,7 @@ app = Flask(__name__)    # points to the root directory
 
 
 ENV = 'dev'
-ENV = 'prod'# With an HEROKU access, this would be activated !!!
+#ENV = 'prod'# With an HEROKU access, this would be activated !!!
 
 
 if ENV == 'dev':
@@ -37,13 +37,15 @@ class Feedback(db.Model):
     customer = db.Column(db.String(200), unique=True)
     dealer = db.Column(db.String(200))
     rating = db.Column(db.Integer)
+    vehicle = db.Column(db.String(200))
     comments = db.Column(db.Text())
     print("Database tables prepared")
 
-    def __init__(self, customer, dealer, rating, comments):
+    def __init__(self, customer, dealer, rating, vehicle, comments):
         self.customer = customer
         self.dealer = dealer
         self.rating = rating
+        self.vehicle = vehicle
         self.comments = comments
         print("initialization done")
 
@@ -66,18 +68,19 @@ def submit():
         customer = request.form['customer']
         dealer = request.form['dealer']
         rating = request.form['rating']
+        vehicle = request.form['vehicle']
         comments = request.form['comments']
-        print("customer:",customer, ", dealer:", dealer, ", rating:", rating, ", comments:", comments)
+        print("customer:",customer, ", dealer:", dealer, ", rating:", rating, ", vehicle: ", vehicle, ", comments:", comments)
         if customer == "" or dealer == "":
             print("ERROR: Input customer or dealer is missing")
             return render_template('index.html', message='Please enter required fields <h3>Hallo Welt</h3>')    # 'message' references to 'class="message"' in index.html
         if db.session.query(Feedback).filter(Feedback.customer == customer).count() == 0:    # if customer is 0, customer not exist => add data to db
-            data = Feedback(customer, dealer, rating, comments)
+            data = Feedback(customer, dealer, rating, vehicle, comments)
             db.session.add(data)
             db.session.commit()
             # calls 'send_mail' application
             print("Data commited to DB.")
-            send_mail(customer, dealer, rating, comments)
+            send_mail(customer, dealer, rating, vehicle, comments)
             print("Send email.")
             return render_template('success.html')
         else:
